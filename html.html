@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Theory Calculator (M|M|1 and M|M|c)</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #4CAF50;
+            font-size: 28px;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        input[type="number"], input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            overflow: auto;
+        }
+        .result h3 {
+            font-size: 22px;
+            color: #4CAF50;
+        }
+        .result p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        .result p strong {
+            color: #333;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 14px;
+            color: #888;
+        }
+        .laws {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #eef7f1;
+            border-radius: 5px;
+        }
+        .laws h3 {
+            color: #4CAF50;
+            font-size: 22px;
+        }
+        .laws p {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Queue Theory Calculator (M|M|1 and M|M|c)</h2>
+        <form id="queueForm">
+            <label for="lambda">Arrival Rate (&#955;):</label>
+            <input type="number" id="lambda" step="any" required>
+
+            <label for="mu">Service Rate (&#956;):</label>
+            <input type="number" id="mu" step="any" required>
+
+            <label for="c">Number of Servers (c) (for M|M|c only):</label>
+            <input type="number" id="c" min="1">
+
+            <button type="button" onclick="calculateQueue()">Calculate</button>
+        </form>
+
+        <div class="result" id="result"></div>
+        
+        <div class="laws" id="laws">
+            <h3>Queue Theory Laws</h3>
+            <p><strong>M|M|1 Laws:</strong></p>
+            <p>1. Traffic Intensity (&#961;) = &#955; / &#956;</p>
+            <p>2. Probability of an idle system (p0) = 1 - &#961;</p>
+            <p>3. Average number in the system (L) = &#961; / (1 - &#961;)</p>
+            <p>4. Average waiting time in the system (W) = 1 / (&#956; - &#955;)</p>
+            <p>5. Average number in the queue (Lq) = &#961;² / (1 - &#961;)</p>
+            <p>6. Average waiting time in the queue (Wq) = &#961; / (&#956; - &#955;)</p>
+            <p>7. P(W > 0) = &#961;e<sup>-&#956;(1-&#961;)t</sup> = &#961;</p>
+            <p>8. P(W > 1/2) = &#961;e<sup>-&#956;(1-&#961;)(1/2)</sup></p>
+            <p>9. P(W > 1) = &#961;e<sup>-&#956;(1-&#961;)(1)</sup></p>
+            <p>10. P(W > t) = &#961;e<sup>-&#956;(1-&#961;)t</sup></p>
+            <p>11. P(W > t | W > 0) = (P(W > t) / P(W > 0)) = e<sup>-&#956;(1-&#961;)t</sup></p>
+            <p>12. Expected Interarrival Time: E[Interarrival Time] = 1 / &#955;</p>
+            <p>13. Expected Service Time: E[Service Time] = 1 / &#956;</p>
+            <p>14. Probability of One Customer in the System (P₁): P₁ = &#961; * p₀</p>
+            <p>15. Probability of having exactly n customers in the system (Pn): Pn = &#961;<sup>n</sup> * (1 - &#961;)</p>
+
+            <p><strong>M|M|c Laws:</strong></p>
+            <p>1. Traffic Intensity (&#961;) = &#955; / (c * &#956;)</p>
+            <p>2. Probability of idle system (p0): Calculated using Erlang's formula:</p>
+            <p>&emsp;p0 = 1 / [&#8721;(k=0 to c-1) [(&#955;/&#956;)^k / k!] + [(&#955;/&#956;)^c / (c! * (1 - &#961;))]]</p>
+            <p>3. Probability of having exactly n customers in the system (Pn):</p>
+            <p>&emsp;For n &le; c: Pn = (&#961;^n / n!) * p0</p>
+            <p>&emsp;For n > c: Pn = (&#961;^n * c^c / c!) * p0</p>
+            <p>4. Probability a customer waits (&#928;w):</p>
+            <p>&emsp;&#928;w = (1 / (1 - &#961;)) * ((c * &#961;)^c / c!) * p0</p>
+            <p>5. Average number in the queue (Lq):</p>
+            <p>&emsp;Lq = (p0 * (&#955;/&#956;)^c * &#961;) / [c! * (1 - &#961;)²]</p>
+            <p>6. Average number in the system (L) = Lq + &#955; / &#956;</p>
+            <p>7. Average waiting time in the system (W) = L / &#955;</p>
+            <p>8. Average waiting time in the queue (Wq) = Lq / &#955;</p>
+            <p>9. P(W > 0) = &#928;w * exp(-c&#956;(1-&#961;)*0)</p>
+            <p>10. P(W > 0.5) = &#928;w * exp(-c&#956;(1-&#961;)*0.5)</p>
+            <p>11. P(W > 1) = &#928;w * exp(-c&#956;(1-&#961;)*1)</p>
+            <p>12. P(W > t) = &#928;w * exp(-c&#956;(1-&#961;)*t)</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2024 Queue Theory Calculator. All rights reserved.</p>
+    </div>
+
+    <script>
+      //  function factorial(n){
+      //      if (n< 0) throw new Erorr ("invalid");
+       //     return n== 0 || n==1 ? 1:n*factorial(n-1);
+      //  }
+        function calculateQueue() {
+            const lambda = parseFloat(document.getElementById('lambda').value);
+            const mu = parseFloat(document.getElementById('mu').value);
+            const c = parseInt(document.getElementById('c').value) || 1;
+
+            if (lambda <= 0 || mu <= 0 || isNaN(lambda) || isNaN(mu)) {
+                document.getElementById('result').innerHTML = "<p style='color:red;'>Please enter valid positive values for &#955; and &#956;.</p>";
+                return;
+            }
+
+            let resultHTML = "";
+     
+            // M|M|1 Calculations
+            if(c==1){
+                 // Additional laws
+            const E_Interarrival_Time = 1 / lambda;
+            const E_Service_Time = 1 / mu;
+            const rho = lambda / mu;
+
+            const p0 = 1 - rho;
+            // Pn for M|M|1 (Pn = ρ^n * (1 - ρ))
+            const Pn = (1 - rho);
+            const L = rho / (1 - rho);
+            const W = 1 / (mu - lambda);
+            const Lq = Math.pow(rho, 2) / (1 - rho);
+            const Wq = rho / (mu - lambda);
+
+            // Additional probabilities for M|M|1
+            const P_W_0 = rho;
+            const P_W_1_2 = rho * Math.exp(-mu * (1 - rho) * 0.5);
+            const P_W_1_5 = rho * Math.exp(-mu * (1 - rho) * 1.5);
+            
+            const P_W_1_2_mean = rho * Math.exp(-mu * (1 - rho) * 0.5*(1/mu));
+            
+
+            const P_W_1_5_mean = rho * Math.exp(-mu * (1 - rho) * 1.5*(1/mu));
+
+            const P_W_1 = rho * Math.exp(-mu * (1 - rho) * 1);
+
+            const P_W_t = -mu * (1 - rho) ;
+            
+            const P_W_t_given_W_0 =-mu * (1 - rho) ;
+            const P_W_t_given_W_mean = -mu * (1 - rho)  ;
+
+
+           
+            const P1 = rho * p0;
+            var sum=0;
+            
+    const EL=lambda/(mu-lambda);
+
+
+resultHTML += `
+    <h3>M|M|1 Queue Results:</h3>
+    <p><strong>E[Interarrival Time]:</strong> ${E_Interarrival_Time.toFixed(5)} hour</p>
+    <p><strong>E[Service Time]:</strong> ${E_Service_Time.toFixed(5)} hour</p>
+    <p><strong>Traffic Intensity (&#961;):</strong> ${rho.toFixed(5)}</p>`
+
+    for (let n = 0; n <= 6; n++) {
+                        const Pn = n <=6 ? (Math.pow(rho, n)) *(1-rho):1;
+                        sum=Pn+sum;
+                        resultHTML += `<p><strong>Probability of having ${n} customers in the system (Pn):</strong> ${Pn.toFixed(5)}</p>`;
+                    }
+
+//  <p><strong>Idle Probability (p0):</strong> ${p0.toFixed(5)}</p>//
+//<p><strong>P(n):</strong>${rho.toFixed(5)}^n x ${Pn.toFixed(5)}</p>//
+//<p><strong>P(W > 1/2):</strong> ${P_W_1_2.toFixed(5)}</p>//
+              //        <p><strong>P(W > 1):</strong> ${P_W_1.toFixed(5)}</p>//
+resultHTML += `
+
+               
+                <p><strong>Probability of having greater than 6 customers in the system : p(N>6)</strong> ${(1-sum).toFixed(5)}</p>
+               
+              
+                <p><strong>Average number in the system E(L):</strong> ${L.toFixed(5)}</p>
+                <p><strong>Average waiting time in the system E(W)--> E(s):</strong> ${W.toFixed(5)} seconds</p>
+                <p><strong>Average number in the queue E(Lq):</strong> ${Lq.toFixed(5)}</p>
+                <p><strong>Average waiting time in the queue E(W):</strong> ${Wq.toFixed(5)} seconds</p>
+                <p><strong>P(W > 0):</strong> ${P_W_0.toFixed(5)}</p>
+               
+                <p><strong>P(W > 1/2 mean time):</strong> ${P_W_1_2_mean.toFixed(5)}</p>
+                <p><strong>P(W > 1.5 mean time):</strong> ${P_W_1_5_mean.toFixed(5)}</p>
+               
+                <p><strong>P(W > t):</strong> For t = 1, P(W > 1) =exp^ ${P_W_t.toFixed(5)}t</p>
+                <p><strong>P(W > t | W > 0):</strong> For t , P(W > t | W > 0) =exp^ ${P_W_t_given_W_0.toFixed(5)}t</p>
+                <p><strong>P(W > t | W > mean time):</strong> For t , P(W > t | W > mean time) =exp^ ${P_W_t_given_W_mean.toFixed(5)}t-${(1/mu).toFixed(5)}</p>
+               
+
+
+
+                <p>Note Note</p>
+                     <p><strong>P(W > 1/2):</strong> ${P_W_1_2.toFixed(5)}</p>
+                     <p><strong>P(W > 1.5):</strong> ${P_W_1_5.toFixed(5)}</p>
+                    
+                     
+
+            `;
+
+            }
+        // M|M|c Calculations
+        if (c > 1) {
+            
+                const rho_c = lambda / (c * mu);
+                if (rho_c >= 1) {
+                    resultHTML += "<p style='color:red;'>System is unstable. &#955; must be less than c&#956;.</p>";
+                } else {
+                    
+                    //const rhoo = lambda / mu;
+                    const E_Interarrival_Time = 1 / lambda;
+                    const E_Service_Time = 1 / mu;
+                    const p0 = calculateP0(c, lambda, mu);
+                    const Lq = (p0 * Math.pow(lambda / mu, c) * rho_c) / (factorial(c) * Math.pow(1 - rho_c, 2));
+                    const L = Lq + lambda / mu;
+                    const Wq = Lq / lambda;
+                    const W = L / lambda;
+                    const Pw = (1 / (1 - rho_c)) * (Math.pow(c * rho_c, c) / factorial(c)) * p0;
+                   
+            
+                    var ssum=0;
+
+                    resultHTML += `<h3>Results for M|M|${c} System:</h3>`;
+                    resultHTML += ` <p><strong>E[Interarrival Time]:</strong> ${E_Interarrival_Time.toFixed(5)} hour</p> `;
+                    resultHTML += `<p><strong>E[Service Time]:</strong> ${E_Service_Time.toFixed(5)} hour</p>`;
+                    resultHTML += `<p><strong>Traffic Intensity (&#961;):</strong> ${rho_c.toFixed(5)}</p>`;
+                    resultHTML += `<p><strong>Probability the system is empty (p0):</strong> ${p0.toFixed(5)}</p>`;
+                    resultHTML += `<p><strong>Probability a customer waits (&#928;w):</strong> ${Pw.toFixed(5)}</p>`;
+
+                    for (let n = 0; n <= 6; n++) {
+                        const Pn = n < c ? (Math.pow(rho_c * c, n) / factorial(n)) * p0 : (Math.pow(rho_c * c, n) / (factorial(c) * Math.pow(c, n - c))) * p0;
+                        ssum=ssum+Pn;
+                        resultHTML += `<p><strong>Probability of having ${n} customers in the system (Pn):</strong> ${Pn.toFixed(5)}</p>`;
+
+                    }
+                    resultHTML += ` <p><strong>Probability of having greater than 6 customers in the system</strong> ${(1-ssum).toFixed(5)}</p>`;
+                    resultHTML += `<p><strong>Average number of customers in the system E(L):</strong> ${L.toFixed(5)}</p>`;
+                    resultHTML += `<p><strong>Average waiting time in the system E(w)--> E(s):</strong> ${W.toFixed(5)}</p>`;
+                    resultHTML += `<p><strong>Average number of customers in the queue E(Lq):</strong> ${Lq.toFixed(5)}</p>`;
+                    resultHTML += `<p><strong>Average waiting time in the queue E(Wq)--> E(w):</strong> ${Wq.toFixed(5)}</p>`;
+
+                   
+                  
+                    const p_n=Math.pow(  rho_c, -c)*(Math.pow(c * rho_c, c) / factorial(c)) * p0;
+                    
+                    // Additional calculations
+                    const P_W_0 = Pw * Math.exp(-c * mu * (1 - rho_c) * 0);
+                    const P_W_05 = Pw * Math.exp(-c * mu * (1 - rho_c) * 0.5);
+                    const P_W_1 = Pw * Math.exp(-c * mu * (1 - rho_c) * 1);
+                    const P_W = -c * mu * (1 - rho_c) ;
+                    const Pc_W_1_2_mean = P_W_0* Math.exp(-0.5*c*(1 - rho_c) );
+                    const Pc_W_1_5_mean = P_W_0* Math.exp(-1.5*c*(1 - rho_c) );
+
+                    const Pc_W_t_given_W_0 =-c*mu * (1 - rho_c) ;
+                    const Pc_W_t_given_W_mean = -c*mu * (1 - rho_c) ;
+                    resultHTML += `<p><strong>P(W > 0):</strong> ${P_W_0.toFixed(5)}</p>`;
+                  
+                    resultHTML += ` <p><strong>P(W > 1/2 mean):</strong> ${Pc_W_1_2_mean.toFixed(5)}</p>`;
+                    resultHTML += ` <p><strong>P(W > 1.5 mean):</strong> ${Pc_W_1_5_mean.toFixed(5)}</p>`;
+                    resultHTML += `<p><strong>P(W > t):</strong> ${Pw.toFixed(5) }exp^${P_W.toFixed(5)}t</p>`;
+
+                    resultHTML += `<p><strong>P(W > t | W > 0):</strong> For t , P(W > t | W > 0) =exp^ ${Pc_W_t_given_W_0.toFixed(5)}t</p>`;
+                    resultHTML += `<p><strong>P(W > t | W > mean time):</strong> For t , P(W > t | W > mean time) =exp^ ${Pc_W_t_given_W_mean.toFixed(5)}t-${(1/mu).toFixed(5)}</p>`;
+
+
+                    resultHTML +=`<p>Note Note </p>`;
+                    resultHTML += `<p><strong>P(W > 0.5):</strong> ${P_W_05.toFixed(5)}</p>`;
+                    resultHTML += `<p><strong>P(W > 1):</strong> ${P_W_1.toFixed(5)}</p>`;
+                   
+                    resultHTML += `<p><strong>Probability of having n customers in the system (Pn):</strong> ${p_n.toFixed(5)}*${rho_c}^n</p>`;
+
+                    for (let t = 1; t <= 5; t++) {
+                        const P_W_t = Pw * Math.exp(-c * mu * (1 - rho_c) * t);
+                        resultHTML += `<p><strong>P(W > ${t}):</strong> ${P_W_t.toFixed(5)}</p>`;
+                    }
+                }
+            }
+
+            document.getElementById('result').innerHTML = resultHTML;
+        }
+
+        function calculateP0(c, lambda, mu) {
+            const rho_c = lambda / (c * mu);
+            let sum = 0;
+            for (let n = 0; n < c; n++) {
+                sum += Math.pow(lambda / mu, n) / factorial(n);
+            }
+            sum += (Math.pow(lambda / mu, c) / (factorial(c) * (1 - rho_c)));
+            return 1 / sum;
+        }
+
+        function factorial(n) {
+            return n === 0 ? 1 : n * factorial(n - 1);
+        }
+    </script>
+</body>
+</html>
